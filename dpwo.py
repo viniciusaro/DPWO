@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import subprocess , argparse , sys , imp , os
+import subprocess , argparse , sys , imp , os, unicodedata
 from wifi import Cell , Scheme
 
 
@@ -9,7 +9,8 @@ Default Password Wifi Owner 0.4v
 python3
 '''
 
-AIRPORT_PATH = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport"
+# AIRPORT_PATH = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport"
+AIRPORT_PATH = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
 
 
 class NETOwner():
@@ -28,6 +29,8 @@ class NETOwner():
         plugins = []
         possible_plugins = os.listdir(plugin_folder)
 
+        print("load plugins...")
+
         for f in possible_plugins : 
             location = os.path.join(plugin_folder,f)
 
@@ -38,9 +41,13 @@ class NETOwner():
             p = imp.load_module(location, *info)
             plugins.append(p)
 
+        print("plugins:")
+        print(plugins)
         return plugins
 
     def osx_networks(self):
+        print("scanning osx networks...")
+
         scan = ""
         while scan == "":  # for some reason airport fails randomly
             scan = subprocess.check_output([self.airport, "scan"]).decode()
@@ -48,8 +55,13 @@ class NETOwner():
         scan = scan.encode('ascii','ignore')
         scan = scan.decode().split("\n")
 
+        print("found scan")
+        print(scan)
+
         for wifi in scan:
-            obj = str.split(wifi)
+            print("wifi: ")
+            print(wifi)
+            obj = unicode.split(wifi)
 
             if len(obj) > 0:
                 yield obj
@@ -61,6 +73,8 @@ class NETOwner():
             yield obj
 
     def scan_network(self):
+        print("scanning...")
+
         if self.os == "linux" or self.os == "linux2":
             scanner = self.linux_networks()
         elif self.os == "darwin":
@@ -104,8 +118,10 @@ class NETOwner():
         return Scheme.find(self.iface, wifi[1]).activate()
 
     def own(self):
-
+        print("own....")
         wifi_available = self.scan_network()
+
+        print(wifi_available)
 
         if len(wifi_available) == 0:
             print("No WiFi available :'(")
@@ -154,6 +170,8 @@ def main():
     print("≈≈≈≈≈≈≈≈≈≈≈≈≈≈")
 
     args = parse_args()
+
+    print(args)
 
     owner = NETOwner(
         args.interface,
